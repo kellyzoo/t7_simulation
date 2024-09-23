@@ -122,6 +122,7 @@ if __name__ == "__main__":
     assert len(img_paths) > 0
     input_imgs = []
     for i in range(len(img_paths)):
+        print("Reading image", img_paths[i])
         img = cv2.imread(img_paths[i], 0)
         img = cv2.resize(img, (320, 320), interpolation=cv2.INTER_LINEAR)
         img = (img.astype(float) * 16)
@@ -188,6 +189,7 @@ if __name__ == "__main__":
 
     output_imgs = simulate(left_clean, right_clean, params, mask, num_burst, subframes, exp)
 
+    mask_name = os.path.basename(args.mask).split(".")[0]
     for i in range(output_imgs.shape[0]):
-        np.save(os.path.join(output_dir, f"{i:05d}.npy"), output_imgs[i,0])
-        cv2.imwrite(os.path.join(output_dir, f"{i:05d}.png"), np.clip(output_imgs[i,0] / 16, 0, 255).astype(np.uint8))
+        np.save(os.path.join(output_dir, f"{mask_name}_{i:05d}.npy"), output_imgs[i,0])
+        cv2.imwrite(os.path.join(output_dir, f"{mask_name}_{i:05d}.png"), np.clip(output_imgs[i,0] / 16, 0, 255).astype(np.uint8))

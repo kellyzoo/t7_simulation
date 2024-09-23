@@ -1,18 +1,64 @@
 import numpy as np
 import cv2
+import argparse
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--subframes',
+        type=int,
+        help='Number of subframes. MUST be a square number',
+        required=True
+    )
+    parser.add_argument(
+        '--frame_size',
+        type=int,
+        help='Size of the frame',
+        required=False,
+        default=320
+    )
+
+    return parser.parse_args()
+
+def get_pattern(K):
+    # Initialize an empty list to hold the patterns
+    patterns = []
+    
+    # Generate K^2 patterns
+    for i in range(K):
+        for j in range(K):
+            # Create a K x K matrix filled with zeros
+            pattern = np.zeros((K, K), dtype=int)
+            # Set the (i, j)-th element to 1
+            pattern[i, j] = 1
+            # Append this pattern to the list
+            patterns.append(pattern)
+    
+    # Convert the list of patterns to a 3D numpy array of shape (K^2, K, K)
+    patterns_array = np.array(patterns)
+    
+    return patterns_array
+
 
 if __name__ == '__main__':
-    subframes = 4
+    args = parse_args()
 
-    patterns = np.array([[[1, 0], [0, 0]], [[0, 1], [0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1]]])
+    # subframes must be a square number
+    tile_size = int(np.sqrt(args.subframes))
+    img_size = args.frame_size
 
-    mask = np.zeros((subframes, 320, 320), dtype=np.uint8)
+    patterns = get_pattern(tile_size)
 
-    for i in range(subframes):
+    mask = np.zeros((args.subframes, img_size, img_size), dtype=np.uint8)
+    tile_multiplier = img_size // tile_size + 1 # we cut off the extra pixels later
+
+    for i in range(args.subframes):
         pattern = patterns[i]
-        mask[i] = np.tile(pattern, (160, 160)) # (160, 160)
+        mask[i] = np.tile(pattern, (tile_multiplier, tile_multiplier))[:img_size, :img_size]
     
-    mask = mask.reshape(subframes * 320, 320)
+    mask = mask.reshape(args.subframes * img_size, img_size)
     mask *= 255
 
-    cv2.imwrite('masks/coded_exposure.bmp', mask)
+    cv2.imwrite(f'masks/coded_exposure_{tile_size}x{tile_size}.bmp', mask)
