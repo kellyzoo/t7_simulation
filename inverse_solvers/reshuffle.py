@@ -18,6 +18,7 @@ def reshuffle_mosaic2vid(image, K):
     assert H % K == 0 and W % K == 0, "Image dimensions must be divisible by K"
     
     # Reshape the image to extract KxK tiles
+    image = image[::-1, :]  # Flip the image vertically
     # (H//K, K, W//K, K): reshapes into submatrices where each is KxK
     reshaped_image = image.reshape(H // K, K, W // K, K)
     
@@ -32,6 +33,7 @@ def reshuffle_mosaic2vid(image, K):
     # Transpose to get the final frame structure
     # (K^2, H//K, W//K): now we have K^2 frames of size H//K x W//K
     frames = flattened_image.transpose(2, 0, 1)
+    frames = frames[::-1, ::-1, :]  # Flip the frames vertically
     
     return frames
 
