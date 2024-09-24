@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from utils import _write_as_png, _generate_test_image
 
-def reshuffle_mosaic2vid(image, K):
+def reshuffle_mosaic2vid(image, K, bucket=0):
     """
     Vectorized conversion of a mosaic image into K^2 low-resolution frames.
     
@@ -33,7 +33,7 @@ def reshuffle_mosaic2vid(image, K):
     # Transpose to get the final frame structure
     # (K^2, H//K, W//K): now we have K^2 frames of size H//K x W//K
     frames = flattened_image.transpose(2, 0, 1)
-    frames = frames[::-1, ::-1, :]  # Flip the frames vertically
+    frames = frames[::-1, ::-1, :] if bucket == 0 else frames[:, ::-1, :]
     
     return frames
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     _write_as_png(f"./outputs/frame_1.png", image_1)
 
     frames_0 = reshuffle_mosaic2vid(image_0, K)
-    frames_1 = reshuffle_mosaic2vid(image_1, K)
+    frames_1 = reshuffle_mosaic2vid(image_1, K, 1)
 
     print(f"Reshuffled frames shape: {frames_0.shape}")
     # print(f"Reshuffled frames shape: {frames.shape}")
