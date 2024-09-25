@@ -40,7 +40,7 @@ def reshuffle_mosaic2vid(image, K, bucket=0):
 
 if __name__ == "__main__":
     # Example usage
-    image_path = "/home/daniel/t6_simulation/outputs/coded_exposure_2x2_00000.png"
+    image_path = "./outputs/fan_5fps/t6_coded_exposure_2x2_00000.png"
     K = 2
     # # Presume 320 x 640 image
     image = cv2.imread(image_path, 0)

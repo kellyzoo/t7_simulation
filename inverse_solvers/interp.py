@@ -3,7 +3,7 @@ import cv2
 from utils import _write_as_png, _generate_test_image
 from scipy.interpolate import griddata
 
-def interpolate_mosaic2vid(image, mask_matrix, show=False):
+def interpolate_mosaic2vid(image, mask_matrix, show=True):
     """
     Parameters:
     - image (numpy array): Input mosaic image of shape (H, W).
@@ -21,7 +21,7 @@ def interpolate_mosaic2vid(image, mask_matrix, show=False):
         channel = image * mask_matrix[k]
 
         if show:
-            _write_as_png(f"./outputs/channel_{k}.png", channel)
+            _write_as_png(f"./outputs/fan_5fps/channel_{k}.png", channel)
         
         # Get the coordinates of non-zero values in the mask
         x, y = np.where(mask_matrix[k] != 0)
@@ -54,8 +54,8 @@ def _show_masks(path, mask, n_tiles=1):
 
 if __name__ == "__main__":
     # Example usage
-    image_path = "/home/daniel/t6_simulation/outputs/coded_exposure_2x2_00000.png"
-    mask_path = "/home/daniel/t6_simulation/masks/coded_exposure_2x2.bmp"
+    image_path = "./outputs/fan_5fps/t6_coded_exposure_2x2_00000.png"
+    mask_path = "./masks/t6_coded_exposure_2x2.bmp"
     K = 2
     # # Presume 320 x 640 image
     image = cv2.imread(image_path, 0)
