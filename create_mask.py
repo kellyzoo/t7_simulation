@@ -10,7 +10,8 @@ def parse_args():
         '--subframes',
         type=int,
         help='Number of subframes. MUST be a square number',
-        required=True
+        required=False,
+        default=4
     )
     parser.add_argument(
         '--frame_width',
@@ -41,6 +42,8 @@ def get_pattern(K):
             pattern = np.zeros((K, K), dtype=int)
             # Set the (i, j)-th element to 1
             pattern[i, j] = 1
+            # Flip pattern along the horizontal axis
+            pattern = np.flip(pattern, axis=0)
             # Append this pattern to the list
             patterns.append(pattern)
     
@@ -71,4 +74,4 @@ if __name__ == '__main__':
     mask = mask.reshape(args.subframes * img_height, img_width)
     mask *= 255
 
-    cv2.imwrite(f'masks/t7_coded_exposure_{tile_size}x{tile_size}.bmp', mask)
+    cv2.imwrite(f'masks/t6_coded_exposure_{tile_size}x{tile_size}.bmp', mask)
