@@ -64,9 +64,14 @@ if __name__ == "__main__":
 
     # # Save the frames as .npy and .png files
     # Show base images
+    file_name = __file__.split("/")[-1].split(".")[0]
     for i, frame in enumerate(frames_0):
         # The output folder in inverse_solvers
-        _write_as_png(f"./outputs/frame_0_{i:05d}.png", frame)
+        # Resize
+        # frame = cv2.resize(frame, (frame.shape[1] * (K), frame.shape[0] * (K)), interpolation=cv2.INTER_LINEAR)
+        _write_as_png(f"./outputs/{file_name}_frame_0_{i:05d}.png", frame)
     for i, frame in enumerate(frames_1):
         # The output folder in inverse_solvers
-        _write_as_png(f"./outputs/frame_1_{i:05d}.png", frame)
+        # Resize
+        # frame = cv2.resize(frame, (frame.shape[1] * (K), frame.shape[0] * (K)), interpolation=cv2.INTER_LINEAR)
+        _write_as_png(f"./outputs/{file_name}_frame_1_{i:05d}.png", frame)

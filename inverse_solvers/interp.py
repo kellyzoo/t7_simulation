@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # Show base images
     for i, frame in enumerate(frames_0):
         # The output folder in inverse_solvers
-        _write_as_png(f"./outputs/frame_0_{i:05d}.png", frame)
+        _write_as_png(f"./outputs/interp/frame_0_{i:05d}.png", frame)
     for i, frame in enumerate(frames_1):
         # The output folder in inverse_solvers
-        _write_as_png(f"./outputs/frame_1_{i:05d}.png", frame)
+        _write_as_png(f"./outputs/interp/frame_1_{i:05d}.png", frame)

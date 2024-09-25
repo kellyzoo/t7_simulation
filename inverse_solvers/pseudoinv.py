@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 from utils import _write_as_png, _generate_test_image
+from scipy.interpolate import griddata
+
 
 def pinv_mosaic2vid(image, mask_matrix):
     """
@@ -55,6 +57,30 @@ def _get_masks(mask):
 
     return left_mask, right_mask
 
+def interpolate_pinv(pinv):
+    # Interpolate the frames using the pinv
+    K, H, W = pinv.shape
+    frames = np.zeros((K, H, W))
+
+    for k in range(K):
+        # Extract the channel where the mask is non-zero
+        channel = pinv[k]
+
+        # Get the coordinates of non-zero values in the mask
+        x, y = np.where(channel != 0)
+        values = channel[x, y]  # Non-zero values in the channel
+
+        # Generate a grid of all points (H, W)
+        grid_x, grid_y = np.meshgrid(np.arange(H), np.arange(W), indexing='ij')
+
+        # Perform interpolation using griddata
+        interpolated = griddata((x, y), values, (grid_x, grid_y), method='linear', fill_value=0)
+
+        # Store the interpolated frame
+        frames[k] = interpolated
+
+    return frames
+
 if __name__ == "__main__":
     # Example usage
     image_path = "/home/daniel/t6_simulation/outputs/coded_exposure_2x2_00000.png"
@@ -80,16 +106,19 @@ if __name__ == "__main__":
     _write_as_png(f"./outputs/frame_1.png", image_1)
 
     frames_0 = pinv_mosaic2vid(image_0, left_mask)
+    frames_0 = interpolate_pinv(frames_0)
     frames_1 = pinv_mosaic2vid(image_1, right_mask)
+    frames_1 = interpolate_pinv(frames_1)
 
     print(f"Reshuffled frames shape: {frames_0.shape}")
     # print(f"Reshuffled frames shape: {frames.shape}")
 
     # # Save the frames as .npy and .png files
+    filename = __file__.split("/")[-1].split(".")[0]
     # Show base images
     for i, frame in enumerate(frames_0):
         # The output folder in inverse_solvers
-        _write_as_png(f"./outputs/frame_0_{i:05d}.png", frame)
+        _write_as_png(f"./outputs/pinv/{filename}_frame_0_{i:05d}.png", frame)
     for i, frame in enumerate(frames_1):
         # The output folder in inverse_solvers
-        _write_as_png(f"./outputs/frame_1_{i:05d}.png", frame)
+        _write_as_png(f"./outputs/pinv/{filename}_frame_1_{i:05d}.png", frame)
