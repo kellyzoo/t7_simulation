@@ -13,11 +13,19 @@ def parse_args():
         required=True
     )
     parser.add_argument(
-        '--frame_size',
+        '--frame_width',
         type=int,
-        help='Size of the frame',
+        help='Width of the frame. For T7, do not change this value from 1024',
         required=False,
-        default=320
+        default=1024
+    )
+
+    parser.add_argument(
+        '--frame_height',
+        type=int,
+        help='Height of the frame',
+        required=False,
+        default=480
     )
 
     return parser.parse_args()
@@ -47,18 +55,20 @@ if __name__ == '__main__':
 
     # subframes must be a square number
     tile_size = int(np.sqrt(args.subframes))
-    img_size = args.frame_size
+    img_height = args.frame_height
+    img_width = args.frame_width
 
     patterns = get_pattern(tile_size)
 
-    mask = np.zeros((args.subframes, img_size, img_size), dtype=np.uint8)
-    tile_multiplier = img_size // tile_size + 1 # we cut off the extra pixels later
+    mask = np.zeros((args.subframes, img_height, img_width), dtype=np.uint8)
+    tile_multiplier_height = img_height // tile_size + 1 # we cut off the extra pixels later
+    tile_multiplier_width = img_width // tile_size + 1
 
     for i in range(args.subframes):
         pattern = patterns[i]
-        mask[i] = np.tile(pattern, (tile_multiplier, tile_multiplier))[:img_size, :img_size]
+        mask[i] = np.tile(pattern, (tile_multiplier_height, tile_multiplier_width))[:img_height, :img_width]
     
-    mask = mask.reshape(args.subframes * img_size, img_size)
+    mask = mask.reshape(args.subframes * img_height, img_width)
     mask *= 255
 
-    cv2.imwrite(f'masks/coded_exposure_{tile_size}x{tile_size}.bmp', mask)
+    cv2.imwrite(f'masks/t7_coded_exposure_{tile_size}x{tile_size}.bmp', mask)
