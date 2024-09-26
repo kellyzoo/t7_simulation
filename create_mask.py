@@ -1,6 +1,16 @@
 import numpy as np
 import cv2
 import argparse
+from PIL import Image
+
+def save_as_1bit_bmp(img_array, filename):
+    # Convert the numpy array to an image
+    img = Image.fromarray(img_array, mode='L')
+    # Convert to 1-bit monochrome
+    img = img.convert('1')
+    # Save as BMP
+    img.save(filename, "BMP")
+
 
 
 def parse_args():
@@ -74,4 +84,5 @@ if __name__ == '__main__':
     mask = mask.reshape(args.subframes * img_height, img_width)
     mask *= 255
 
-    cv2.imwrite(f'masks/t6_coded_exposure_{tile_size}x{tile_size}.bmp', mask)
+    # Save the mask as 1-bit BMP
+    save_as_1bit_bmp(mask, f'masks/t6_coded_exposure_{tile_size}x{tile_size}.bmp')
