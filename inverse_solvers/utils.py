@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import os
 
 def _write_as_png(file_path, image):
     """
@@ -9,6 +10,12 @@ def _write_as_png(file_path, image):
     - file_path (str): Path to the output PNG file.
     - image (numpy array): Image to write.
     """
+    # Extract the directory from the path
+    dir = os.path.dirname(file_path)
+    
+    # Check if the directory exists, if not, create it
+    if not os.path.exists(dir):
+        os.mkdir(dir)
     cv2.imwrite(file_path, np.clip(image / 16, 0, 255).astype(np.uint8))
 
 def _generate_test_image(K, size):
