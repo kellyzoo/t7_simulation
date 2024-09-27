@@ -48,7 +48,7 @@ if __name__ == "__main__":
     # image = np.tile(_generate_test_image(K, 320), (1, 2)) * 256 * 16
     print(f"Input image shape: {image.shape}")
     # Each bucket individually
-    size = image.shape[0]
+    size = image.shape[1] // 2
     image_0 = image[:, :size]
     image_1 = image[:, size:]
 
