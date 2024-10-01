@@ -70,7 +70,7 @@ if __name__ == "__main__":
     mask = cv2.imread(mask_path, 0)
     assert mask.shape[0] % 320 == 0 and mask.shape[1] >= 320
     mask = (mask > 0).astype(int)
-    left_mask = mask[::-1,:320].reshape(mask.shape[0] // 320, 320, 320)
+    left_mask = mask[::-1,:320].reshape(mask.shape[0] // 320, 320, 320)[::-1]
     right_mask = mask[::-1,:320].reshape(mask.shape[0] // 320, 320, 320)[::-1]
 
     _write_as_png(f"./outputs/frame.png", image)
