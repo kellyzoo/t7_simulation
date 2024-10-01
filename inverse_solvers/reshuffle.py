@@ -13,14 +13,23 @@ def reshuffle_mosaic2vid(image, K, bucket=0):
     Returns:
     - frames (numpy array): Reshuffled frames of shape (K^2, H//K, W//K).
     """
-    
+
     H, W = image.shape
-    assert H % K == 0 and W % K == 0, "Image dimensions must be divisible by K"
+    
+    # Compute the padding required to make H and W divisible by K
+    pad_h = (K - H % K) % K
+    pad_w = (K - W % K) % K
+    
+    # Pad the image with zeros
+    padded_image = np.pad(image, ((0, pad_h), (0, pad_w)), mode='constant', constant_values=0)
+    
+    # Get the new padded dimensions
+    new_H, new_W = padded_image.shape
     
     # Reshape the image to extract KxK tiles
-    image = image[::-1, :]  # Flip the image vertically
+    padded_image = padded_image[::-1, :]  # Flip the image vertically
     # (H//K, K, W//K, K): reshapes into submatrices where each is KxK
-    reshaped_image = image.reshape(H // K, K, W // K, K)
+    reshaped_image = padded_image.reshape(new_H // K, K, new_W // K, K)
     
     # Transpose to get the KxK tile dimensions aligned for reshuffling
     # Now shape is (H//K, W//K, K, K)
@@ -28,7 +37,7 @@ def reshuffle_mosaic2vid(image, K, bucket=0):
     
     # Reshape to combine the KxK tiles into K^2 separate frames
     # (H//K, W//K, K^2): each KxK tile is now flattened into K^2 and frames are across the grid
-    flattened_image = transposed_image.reshape(H // K, W // K, K * K)
+    flattened_image = transposed_image.reshape(new_H // K, new_W // K, K * K)
     
     # Transpose to get the final frame structure
     # (K^2, H//K, W//K): now we have K^2 frames of size H//K x W//K
