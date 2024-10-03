@@ -61,7 +61,7 @@ def train(device, tap, data_dir, save_dir):
     test_dataset = torch.utils.data.ConcatDataset(dataset_list_test)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
 
-    generator = gan.NoiseGenerator(device, data_dir, r=320, c=320, n=1)
+    generator = gan.NoiseGenerator(device, data_dir, r=480, c=640, n=1)
     generator.cuda(device)
     optimizer_g = torch.optim.Adam([
             {"params": generator.g, "lr": 0.0002},
@@ -239,4 +239,4 @@ if __name__ == "__main__":
     right_params = train(device, "right", right_data, right_save)
     
     params = {**left_params, **right_params}
-    sio.savemat(os.path.join(args.data_root, "params.mat"), params)
+    sio.savemat(os.path.join(args.data_root, "T7_params.mat"), params)
