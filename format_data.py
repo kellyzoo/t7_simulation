@@ -36,7 +36,8 @@ if __name__ == "__main__":
 
         imgs = []
         for img in files:
-            imgs.append(np.load(img)[:,4:644].astype(np.uint16))
+            img = np.load(img)[:,640:] * 255
+            imgs.append(img.astype(np.uint16))
         imgs = np.array(imgs)
         imgs = np.clip((imgs[-1])[None,:,:] - imgs[:-1,:,:], 0, None)
         imgs = imgs.reshape(*imgs.shape, 1).astype(np.float32)
@@ -63,7 +64,8 @@ if __name__ == "__main__":
 
     imgs = []
     for img in files:
-        imgs.append(np.load(img)[:,4:644].astype(np.uint16))
+        img = np.load(img)[:,640:] * 255
+        imgs.append(img.astype(np.uint16))
     imgs = np.array(imgs)
     imgs = np.clip((imgs[-1])[None,:,:] - imgs[:-1,:,:], 0, None)
     imgs = imgs.reshape(*imgs.shape, 1).astype(np.float32)
@@ -80,7 +82,8 @@ if __name__ == "__main__":
 
         imgs = []
         for img in files:
-            imgs.append(np.load(img)[:,648:].astype(np.uint16))
+            img = np.load(img)[:,:640] * 255
+            imgs.append(img.astype(np.uint16))
         imgs = np.array(imgs)
         imgs = np.clip((imgs[-1])[None,:,:] - imgs[:-1,:,:], 0, None)
         imgs = imgs.reshape(*imgs.shape, 1).astype(np.float32)
@@ -107,7 +110,8 @@ if __name__ == "__main__":
 
     imgs = []
     for img in files:
-        imgs.append(np.load(img)[:,648:].astype(np.uint16))
+        img = np.load(img)[:,:640] * 255
+        imgs.append(img.astype(np.uint16))
     imgs = np.array(imgs)
     imgs = np.clip((imgs[-1])[None,:,:] - imgs[:-1,:,:], 0, None)
     imgs = imgs.reshape(*imgs.shape, 1).astype(np.float32)

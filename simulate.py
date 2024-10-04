@@ -5,7 +5,6 @@ import cv2
 import scipy.io as sio
 import argparse
 
-
 def simulate(left_clean, right_clean, params, mask, num_burst, subframes, exp):
     left_noisy = left_clean * params["left_g"] + \
             params["left_h"]  * (left_mask.sum(axis=0) / subframes)[None,None] + \
@@ -16,36 +15,36 @@ def simulate(left_clean, right_clean, params, mask, num_burst, subframes, exp):
             params["right_dark"]**2 * exp * right_mask.sum(axis=0)[None,None]
     right_noisy = np.clip(right_noisy, 0, params["right_fwc"])
 
-    left_shot = np.random.normal(size=(num_burst, 1, 320, 320)) * params["left_shot"] * np.sqrt(left_clean) * params["left_g"]
+    left_shot = np.random.normal(size=(num_burst, 1, H, W)) * params["left_shot"] * np.sqrt(left_clean) * params["left_g"]
     left_shot[left_noisy >= params["left_fwc"]] = 0
     left_noisy += left_shot
-    right_shot = np.random.normal(size=(num_burst, 1, 320, 320)) * params["right_shot"] * np.sqrt(right_clean) * params["right_g"]
+    right_shot = np.random.normal(size=(num_burst, 1, H, W)) * params["right_shot"] * np.sqrt(right_clean) * params["right_g"]
     right_shot[right_noisy >= params["right_fwc"]] = 0
     right_noisy += right_shot
 
-    left_read = np.random.normal(size=(num_burst, 1, 320, 320)) * params["left_read"]
+    left_read = np.random.normal(size=(num_burst, 1, H, W)) * params["left_read"]
     left_noisy += left_read
-    right_read = np.random.normal(size=(num_burst, 1, 320, 320)) * params["right_read"]
+    right_read = np.random.normal(size=(num_burst, 1, H, W)) * params["right_read"]
     right_noisy += right_read
 
-    left_row = np.random.normal(size=(num_burst, 1, 320, 1)) * params["left_row"]
+    left_row = np.random.normal(size=(num_burst, 1, H, 1)) * params["left_row"]
     left_noisy += left_row
-    right_row = np.random.normal(size=(num_burst, 1, 320, 1)) * params["right_row"]
+    right_row = np.random.normal(size=(num_burst, 1, H, 1)) * params["right_row"]
     right_noisy += right_row
 
-    left_rowt = np.random.normal(size=(1, 1, 320, 1)) * params["left_rowt"]
+    left_rowt = np.random.normal(size=(1, 1, H, 1)) * params["left_rowt"]
     left_noisy += left_rowt
-    right_rowt = np.random.normal(size=(1, 1, 320, 1)) * params["right_rowt"]
+    right_rowt = np.random.normal(size=(1, 1, H, 1)) * params["right_rowt"]
     right_noisy += right_rowt
 
-    left_quant = np.random.uniform(size=(num_burst, 1, 320, 320)) * params["left_quant"]
+    left_quant = np.random.uniform(size=(num_burst, 1, H, W)) * params["left_quant"]
     left_noisy += left_quant
-    right_quant = np.random.uniform(size=(num_burst, 1, 320, 320)) * params["right_quant"]
+    right_quant = np.random.uniform(size=(num_burst, 1, H, W)) * params["right_quant"]
     right_noisy += right_quant
 
-    left_dark = np.random.normal(size=(num_burst, 1, 320, 320)) * params["left_dark"] * np.sqrt(exp * left_mask.sum(axis=0)[None,None])
+    left_dark = np.random.normal(size=(num_burst, 1, H, W)) * params["left_dark"] * np.sqrt(exp * left_mask.sum(axis=0)[None,None])
     left_noisy += left_dark
-    right_dark = np.random.normal(size=(num_burst, 1, 320, 320)) * params["right_dark"] * np.sqrt(exp * right_mask.sum(axis=0)[None,None])
+    right_dark = np.random.normal(size=(num_burst, 1, H, W)) * params["right_dark"] * np.sqrt(exp * right_mask.sum(axis=0)[None,None])
     right_noisy += right_dark
 
     return np.concatenate((left_noisy, right_noisy), axis=3)
@@ -110,13 +109,28 @@ if __name__ == "__main__":
             help="linear scale that can be used to scale input images prior to simulation",
             default=1.0
     )
+    parser.add_argument(
+        "--cam_type",
+        type=str,
+        choices=["t6", "t7"],
+        default="t7"
+    )
     args = parser.parse_args()
 
     params = sio.loadmat(args.params)
+    global H
+    global W
+    if args.cam_type == "t6":
+        H, W = 320, 320
+    elif args.cam_type == "t7":
+        H, W = 480, 640
+    else:
+        raise ValueError("Invalid camera type")
+    print("H:", H, "W:", W)
 
     mask = cv2.imread(args.mask, 0)
-    assert mask.shape[0] % 320 == 0 and mask.shape[1] >= 320
-    mask = mask[::-1,:320]
+    assert mask.shape[0] % H == 0 and mask.shape[1] >= W
+    mask = mask[::-1,:W]
 
     img_paths = sorted(glob.glob(args.input_imgs.replace('?', '*')))
     assert len(img_paths) > 0
@@ -124,7 +138,8 @@ if __name__ == "__main__":
     for i in range(len(img_paths)):
         print("Reading image", img_paths[i])
         img = cv2.imread(img_paths[i], 0)
-        img = cv2.resize(img, (320, 320), interpolation=cv2.INTER_LINEAR)
+        # need to flip dimensions for cv2
+        img = cv2.resize(img, (W, H), interpolation=cv2.INTER_LINEAR)
         img = (img.astype(float) * 16)
         input_imgs.append(img)
     input_imgs = np.stack(input_imgs)
@@ -150,9 +165,9 @@ if __name__ == "__main__":
     input_imgs = input_imgs * scale
 
     if mode == "single_in":
-        mask_re = np.zeros((subframes * 320, 320))
+        mask_re = np.zeros((subframes * H, W))
         mask_re[:min(mask.shape[0], mask_re.shape[0])] = mask[:min(mask.shape[0], mask_re.shape[0])]
-        mask_re = mask_re.reshape(subframes, 320, 320)
+        mask_re = mask_re.reshape(subframes, H, W)
         left_mask = (mask_re > 0).astype(int)
         right_mask = (mask_re == 0).astype(int)
 
@@ -164,9 +179,9 @@ if __name__ == "__main__":
     elif mode == "multi_in_single_out":
         subframes = input_imgs.shape[0]
 
-        mask_re = np.zeros((subframes * 320, 320))
+        mask_re = np.zeros((subframes * H, W))
         mask_re[:min(mask.shape[0], mask_re.shape[0])] = mask[:min(mask.shape[0], mask_re.shape[0])]
-        mask_re = mask_re.reshape(subframes, 320, 320)
+        mask_re = mask_re.reshape(subframes, H, W)
         left_mask = (mask_re > 0).astype(int)
         right_mask = (mask_re == 0).astype(int)
 
@@ -176,9 +191,9 @@ if __name__ == "__main__":
     else:
         num_burst = input_imgs.shape[0]
 
-        mask_re = np.zeros((subframes * 320, 320))
+        mask_re = np.zeros((subframes * H, W))
         mask_re[:min(mask.shape[0], mask_re.shape[0])] = mask[:min(mask.shape[0], mask_re.shape[0])]
-        mask_re = mask_re.reshape(subframes, 320, 320)
+        mask_re = mask_re.reshape(subframes, H, W)
         left_mask = (mask_re > 0).astype(int)
         right_mask = (mask_re == 0).astype(int)
 

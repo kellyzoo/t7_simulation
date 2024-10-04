@@ -87,6 +87,11 @@ def train(device, tap, data_dir, save_dir):
             clean = sample["clean_imgs"][0].to(device)
             exp = sample["exp"].to(device)[0]
 
+            # If last two dims are not 480 x 640, pad them
+            if noisy.shape[-2:] != (480, 640):
+                noisy = torch.nn.functional.pad(noisy, (0, 640 - noisy.shape[-1], 0, 480 - noisy.shape[-2]), mode="constant", value=0)
+                clean = torch.nn.functional.pad(clean, (0, 640 - clean.shape[-1], 0, 480 - clean.shape[-2]), mode="constant", value=0)
+
             gen_noisy = generator(clean, exp, False)
 
             loss_l2 = torch.mean((noisy - gen_noisy) ** 2)
@@ -105,6 +110,10 @@ def train(device, tap, data_dir, save_dir):
             noisy = sample["noisy_imgs"][0].to(device)
             clean = sample["clean_imgs"][0].to(device)
             exp = sample["exp"][0].to(device)
+
+            if noisy.shape[-2:] != (480, 640):
+                noisy = torch.nn.functional.pad(noisy, (0, 640 - noisy.shape[-1], 0, 480 - noisy.shape[-2]), mode="constant", value=0)
+                clean = torch.nn.functional.pad(clean, (0, 640 - clean.shape[-1], 0, 480 - clean.shape[-2]), mode="constant", value=0)
 
             gen_noisy = generator(clean, exp, True)
 
@@ -235,8 +244,10 @@ if __name__ == "__main__":
         device = torch.device("cuda")
 
     left_params = train(device, "left", left_data, left_save)
+    # left_params = sio.loadmat(os.path.join(left_save, "left_params.mat"))
 
-    right_params = train(device, "right", right_data, right_save)
+    # right_params = train(device, "right", right_data, right_save)
+    right_params = sio.loadmat(os.path.join(right_save, "right_params.mat"))
     
     params = {**left_params, **right_params}
-    sio.savemat(os.path.join(args.data_root, "T7_params.mat"), params)
+    sio.savemat(os.path.join(args.data_root, "test_T7_params.mat"), params)
