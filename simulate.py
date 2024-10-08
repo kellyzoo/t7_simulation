@@ -71,9 +71,9 @@ if __name__ == "__main__":
             required=True
     )
     parser.add_argument(
-            "--output_dir",
+            "--output_fname",
             type=str,
-            help="the path to the output directory",
+            help="the path to the output file",
             required=True
     )
     parser.add_argument(
@@ -133,10 +133,11 @@ if __name__ == "__main__":
     mask = mask[::-1,:W]
 
     img_paths = sorted(glob.glob(args.input_imgs.replace('?', '*')))
+    print("img_paths:", img_paths)
     assert len(img_paths) > 0
     input_imgs = []
     for i in range(len(img_paths)):
-        print("Reading image", img_paths[i])
+        # print("Reading image", img_paths[i])
         img = cv2.imread(img_paths[i], 0)
         # need to flip dimensions for cv2
         img = cv2.resize(img, (W, H), interpolation=cv2.INTER_LINEAR)
@@ -144,9 +145,10 @@ if __name__ == "__main__":
         input_imgs.append(img)
     input_imgs = np.stack(input_imgs)
 
-    output_dir = args.output_dir
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    output_fname = args.output_fname
+#     output_dir = args.output_dir
+#     if not os.path.exists(output_dir):
+#         os.makedirs(output_dir)
 
     mode = args.mode
     assert mode in ["single_in", "multi_in_single_out", "multi_in_multi_out"]
@@ -206,5 +208,8 @@ if __name__ == "__main__":
 
     mask_name = os.path.basename(args.mask).split(".")[0]
     for i in range(output_imgs.shape[0]):
-        np.save(os.path.join(output_dir, f"{mask_name}_{i:05d}.npy"), output_imgs[i,0])
-        cv2.imwrite(os.path.join(output_dir, f"{mask_name}_{i:05d}.png"), np.clip(output_imgs[i,0] / 16, 0, 255).astype(np.uint8))
+        np.save(f"{output_fname}.npy", output_imgs[i,0])
+        cv2.imwrite(f"{output_fname}.png", np.clip(output_imgs[i,0] / 16, 0, 255).astype(np.uint8))
+
+        # np.save(os.path.join(output_dir, f"{mask_name}_{i:05d}.npy"), output_imgs[i,0])
+        # cv2.imwrite(os.path.join(output_dir, f"{mask_name}_{i:05d}.png"), np.clip(output_imgs[i,0] / 16, 0, 255).astype(np.uint8))
