@@ -2,6 +2,10 @@ import numpy as np
 import cv2
 from utils import _write_as_png, _generate_test_image
 
+import os
+import argparse
+from pathlib import Path
+
 def reshuffle_mosaic2vid(image, K, bucket=0):
     """
     Vectorized conversion of a mosaic image into K^2 low-resolution frames.
@@ -49,7 +53,24 @@ def reshuffle_mosaic2vid(image, K, bucket=0):
 
 if __name__ == "__main__":
     # Example usage
-    image_path = "./outputs/fan_5fps/t6_coded_exposure_2x2_00000.png"
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--image_path',
+        type=str,
+        help='Path to the mosaic image',
+        required=True
+    )
+    parser.add_argument(
+        '--output_dir',
+        type=str,
+        help='Path to the output folder',
+        required=True
+    )
+
+    args = parser.parse_args()
+    image_path = args.image_path
+    output_dir = args.output_dir
+
     K = 2
     # # Presume 320 x 640 image
     image = cv2.imread(image_path, 0)
@@ -61,14 +82,14 @@ if __name__ == "__main__":
     image_0 = image[:, :size]
     image_1 = image[:, size:]
 
-    _write_as_png(f"./outputs/frame.png", image)
-    _write_as_png(f"./outputs/frame_0.png", image_0)
-    _write_as_png(f"./outputs/frame_1.png", image_1)
+    # _write_as_png(f"./outputs/frame.png", image)
+    _write_as_png(os.path.join(output_dir, f"{Path(image_path).stem}_left.png"), image_0)
+    _write_as_png(os.path.join(output_dir, f"{Path(image_path).stem}_right.png"), image_1)
 
     frames_0 = reshuffle_mosaic2vid(image_0, K)
     frames_1 = reshuffle_mosaic2vid(image_1, K, 1)
 
-    print(f"Reshuffled frames shape: {frames_0.shape}")
+    # print(f"Reshuffled frames shape: {frames_0.shape}")
     # print(f"Reshuffled frames shape: {frames.shape}")
 
     # # Save the frames as .npy and .png files
@@ -78,9 +99,11 @@ if __name__ == "__main__":
         # The output folder in inverse_solvers
         # Resize
         # frame = cv2.resize(frame, (frame.shape[1] * (K), frame.shape[0] * (K)), interpolation=cv2.INTER_LINEAR)
-        _write_as_png(f"./outputs/{file_name}_frame_0_{i:05d}.png", frame)
+        _write_as_png(os.path.join(output_dir, f"{Path(image_path).stem}_left_{i:05d}.png"), frame)
+        # _write_as_png(f"./outputs/{file_name}_frame_0_{i:05d}.png", frame)
     for i, frame in enumerate(frames_1):
         # The output folder in inverse_solvers
         # Resize
         # frame = cv2.resize(frame, (frame.shape[1] * (K), frame.shape[0] * (K)), interpolation=cv2.INTER_LINEAR)
-        _write_as_png(f"./outputs/{file_name}_frame_1_{i:05d}.png", frame)
+        _write_as_png(os.path.join(output_dir, f"{Path(image_path).stem}_right_{i:05d}.png"), frame)
+        # _write_as_png(f"./outputs/{file_name}_frame_1_{i:05d}.png", frame)
