@@ -2,5 +2,6 @@
 **/outputs/
 **/__pycache__/
 **/data/
+**/bora_data/
 **/nfs_data/
 **/*.zip

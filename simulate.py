@@ -5,6 +5,9 @@ import cv2
 import scipy.io as sio
 import argparse
 
+def _save_image(img, img_path):
+    cv2.imwrite(os.path.join("./outputs", img_path), np.clip(img / 16, 0, 255).astype(np.uint8))
+
 def simulate(left_clean, right_clean, params, mask, num_burst, subframes, exp):
     left_noisy = left_clean * params["left_g"] + \
             params["left_h"]  * (left_mask.sum(axis=0) / subframes)[None,None] + \
@@ -15,6 +18,8 @@ def simulate(left_clean, right_clean, params, mask, num_burst, subframes, exp):
             params["right_dark"]**2 * exp * right_mask.sum(axis=0)[None,None]
     right_noisy = np.clip(right_noisy, 0, params["right_fwc"])
 
+    _save_image(left_noisy[0,0], "left_noisy.png")
+
     left_shot = np.random.normal(size=(num_burst, 1, H, W)) * params["left_shot"] * np.sqrt(left_clean) * params["left_g"]
     left_shot[left_noisy >= params["left_fwc"]] = 0
     left_noisy += left_shot
@@ -22,25 +27,35 @@ def simulate(left_clean, right_clean, params, mask, num_burst, subframes, exp):
     right_shot[right_noisy >= params["right_fwc"]] = 0
     right_noisy += right_shot
 
+    _save_image(left_noisy[0,0], "left_noisy_shot.png")
+
     left_read = np.random.normal(size=(num_burst, 1, H, W)) * params["left_read"]
     left_noisy += left_read
     right_read = np.random.normal(size=(num_burst, 1, H, W)) * params["right_read"]
     right_noisy += right_read
+
+    _save_image(left_noisy[0,0], "left_noisy_read.png")
 
     left_row = np.random.normal(size=(num_burst, 1, H, 1)) * params["left_row"]
     left_noisy += left_row
     right_row = np.random.normal(size=(num_burst, 1, H, 1)) * params["right_row"]
     right_noisy += right_row
 
+    _save_image(left_noisy[0,0], "left_noisy_row.png")
+
     left_rowt = np.random.normal(size=(1, 1, H, 1)) * params["left_rowt"]
     left_noisy += left_rowt
     right_rowt = np.random.normal(size=(1, 1, H, 1)) * params["right_rowt"]
     right_noisy += right_rowt
 
+    _save_image(left_noisy[0,0], "left_noisy_rowt.png")
+
     left_quant = np.random.uniform(size=(num_burst, 1, H, W)) * params["left_quant"]
     left_noisy += left_quant
     right_quant = np.random.uniform(size=(num_burst, 1, H, W)) * params["right_quant"]
     right_noisy += right_quant
+
+    _save_image(left_noisy[0,0], "left_noisy_quant.png")
 
     left_dark = np.random.normal(size=(num_burst, 1, H, W)) * params["left_dark"] * np.sqrt(exp * left_mask.sum(axis=0)[None,None])
     left_noisy += left_dark

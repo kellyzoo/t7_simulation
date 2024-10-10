@@ -24,10 +24,10 @@ Quick run commands (details on each command below):
 python format_data.py --data_root data
 python train_gan.py --data_root data
 python simulate.py \
-   --params data/params.mat \
-   --mask masks/t6_intersect1.bmp \
-   --input_imgs input/image.png \
-   --output_dir output
+   --params bora_data/test_T7_params.mat \
+   --mask masks/t7_all_white.bmp \
+   --input_imgs inputs/gray.png \
+   --output_dir outputs
 ```
 
 ### List of dependencies
