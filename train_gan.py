@@ -154,7 +154,7 @@ def train(device, tap, data_dir, save_dir):
                 loss_g.backward()
                 optimizer_g.step()
 
-            if i % 10 == 0:
+            if i % 3 == 0:
                 print(tap + f" epoch {epoch} / {num_epochs}, batch {i} / {len(train_loader)}, " + \
                         f"d loss {loss_d.item()}, g loss {loss_g.item()}, lpips loss {loss_lpips.item()}")
                 g_losses.append(loss_g.item())
@@ -226,6 +226,7 @@ def train(device, tap, data_dir, save_dir):
     plt.plot(d_losses, label="Discriminator Loss")
     plt.plot(lpips_losses, label="LPIPS Loss")
     plt.legend()
+    # x-axis is number of iterations / 3
     plt.savefig(os.path.join(save_dir, "losses.png"), bbox_inches="tight")
     plt.clf()
 
@@ -258,11 +259,11 @@ if __name__ == "__main__":
     else:
         device = torch.device("cuda")
 
-    # left_params = train(device, "left", left_data, left_save)
-    left_params = sio.loadmat(os.path.join(left_save, "left_params.mat"))
+    left_params = train(device, "left", left_data, left_save)
+    # left_params = sio.loadmat(os.path.join(left_save, "left_params.mat"))
 
     right_params = train(device, "right", right_data, right_save)
     # right_params = sio.loadmat(os.path.join(right_save, "right_params.mat"))
     
     params = {**left_params, **right_params}
-    sio.savemat(os.path.join(args.data_root, "test_T7_params.mat"), params)
+    sio.savemat(os.path.join(args.data_root, "final_T7_params.mat"), params)

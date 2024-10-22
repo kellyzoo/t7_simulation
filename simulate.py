@@ -6,9 +6,10 @@ import scipy.io as sio
 import argparse
 
 def _save_image(img, img_path):
-    cv2.imwrite(os.path.join("./outputs", img_path), np.clip(img / 16, 0, 255).astype(np.uint8))
+    cv2.imwrite(os.path.join("./outputs", img_path), np.clip(img, 0, 255).astype(np.uint8))
 
 def simulate(left_clean, right_clean, params, mask, num_burst, subframes, exp):
+    _save_image(left_clean[0,0], "left_clean.png")
     left_noisy = left_clean * params["left_g"] + \
             params["left_h"]  * (left_mask.sum(axis=0) / subframes)[None,None] + \
             params["left_dark"]**2 * exp * left_mask.sum(axis=0)[None,None]
@@ -116,7 +117,7 @@ if __name__ == "__main__":
             "--exp",
             type=float,
             help="exposure time [us] of each subframe (>= 26.21)",
-            default=26.21
+            default=78.01
     )
     parser.add_argument(
             "--scale",
@@ -156,7 +157,7 @@ if __name__ == "__main__":
         img = cv2.imread(img_paths[i], 0)
         # need to flip dimensions for cv2
         img = cv2.resize(img, (W, H), interpolation=cv2.INTER_LINEAR)
-        img = (img.astype(float) * 16)
+        img = (img.astype(float))
         input_imgs.append(img)
     input_imgs = np.stack(input_imgs)
 
@@ -224,7 +225,7 @@ if __name__ == "__main__":
     mask_name = os.path.basename(args.mask).split(".")[0]
     for i in range(output_imgs.shape[0]):
         np.save(f"{output_fname}.npy", output_imgs[i,0])
-        cv2.imwrite(f"{output_fname}.png", np.clip(output_imgs[i,0] / 16, 0, 255).astype(np.uint8))
+        cv2.imwrite(f"{output_fname}.png", np.clip(output_imgs[i,0], 0, 255).astype(np.uint8))
 
         # np.save(os.path.join(output_dir, f"{mask_name}_{i:05d}.npy"), output_imgs[i,0])
         # cv2.imwrite(os.path.join(output_dir, f"{mask_name}_{i:05d}.png"), np.clip(output_imgs[i,0] / 16, 0, 255).astype(np.uint8))
