@@ -71,7 +71,7 @@ if __name__ == "__main__":
     image_path = args.image_path
     output_dir = args.output_dir
 
-    K = 2
+    K = 4
     # # Presume 320 x 640 image
     image = cv2.imread(image_path, 0)
     image = (image.astype(float) * 16)

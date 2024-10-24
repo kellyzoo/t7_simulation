@@ -49,7 +49,7 @@ def sample_frames_from_video(video_path, k, div):
 
 # Usage example:
 video_path = "./inputs/fan.mp4"
-k = 4  # Number of frames to sample
+k = 16  # Number of frames to sample
 div = 6  # divide fps by div
 input_imgs = sample_frames_from_video(video_path, k, div)
 print(f"Sampled frames shape: {input_imgs.shape}")

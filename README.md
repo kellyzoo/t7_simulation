@@ -24,11 +24,15 @@ Quick run commands (details on each command below):
 python format_data.py --data_root data
 python train_gan.py --data_root data
 python simulate.py \
-   --params bora_data/final_T7_params.mat \
+   --params final_T7_params.mat \
    --mask masks/t7_coded_exposure_2x2.bmp \
-   --input_imgs inputs/?.png \
+   --input_imgs inputs/4_frames/?.png \
    --mode multi_in_single_out \
-   --output_fname outputs/fan_2x2_video.png \
+   --output_fname outputs/fan_2x2_video 
+
+python reshuffle.py \
+    --image_path "./../outputs/fan_4x4_video.png" \
+    --output_dir "./../outputs/reshuffled/" 
 ```
 
 ### List of dependencies

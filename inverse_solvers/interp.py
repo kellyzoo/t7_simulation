@@ -54,24 +54,24 @@ def _show_masks(path, mask, n_tiles=1):
 
 if __name__ == "__main__":
     # Example usage
-    image_path = "./outputs/fan_5fps/t6_coded_exposure_2x2_00000.png"
-    mask_path = "./masks/t6_coded_exposure_2x2.bmp"
-    K = 2
+    image_path = "./../outputs/fan_4x4_video.png"
+    mask_path = "./../masks/t7_coded_exposure_4x4.bmp"
+    K = 4
+    H, W = 480, 640
     # # Presume 320 x 640 image
     image = cv2.imread(image_path, 0)
     image = (image.astype(float) * 16)
     # image = np.tile(_generate_test_image(K, 320), (1, 2)) * 256 * 16
     print(f"Input image shape: {image.shape}")
     # Each bucket individually
-    size = image.shape[0]
-    image_0 = image[:, :size]
-    image_1 = image[:, size:]
+    image_0 = image[:, :W]
+    image_1 = image[:, W:]
 
     mask = cv2.imread(mask_path, 0)
-    assert mask.shape[0] % 320 == 0 and mask.shape[1] >= 320
+    assert mask.shape[0] % H == 0 and mask.shape[1] >= W
     mask = (mask > 0).astype(int)
-    left_mask = mask[::-1,:320].reshape(mask.shape[0] // 320, 320, 320)[::-1]
-    right_mask = mask[::-1,:320].reshape(mask.shape[0] // 320, 320, 320)[::-1]
+    left_mask = mask[::-1,:W].reshape(mask.shape[0] // H, H, W)
+    right_mask = mask[::-1,:W].reshape(mask.shape[0] // H, H, W)
 
     _write_as_png(f"./outputs/frame.png", image)
     _write_as_png(f"./outputs/frame_0.png", image_0)

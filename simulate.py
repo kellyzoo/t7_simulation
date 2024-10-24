@@ -6,7 +6,8 @@ import scipy.io as sio
 import argparse
 
 def _save_image(img, img_path):
-    cv2.imwrite(os.path.join("./outputs", img_path), np.clip(img, 0, 255).astype(np.uint8))
+    # cv2.imwrite(os.path.join("./outputs", img_path), np.clip(img, 0, 255).astype(np.uint8))
+    pass
 
 def simulate(left_clean, right_clean, params, mask, num_burst, subframes, exp):
     _save_image(left_clean[0,0], "left_clean.png")

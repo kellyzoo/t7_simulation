@@ -85,4 +85,4 @@ if __name__ == '__main__':
     mask *= 255
 
     # Save the mask as 1-bit BMP
-    save_as_1bit_bmp(mask, f'masks/t6_coded_exposure_{tile_size}x{tile_size}.bmp')
+    save_as_1bit_bmp(mask, f'masks/t7_coded_exposure_{tile_size}x{tile_size}.bmp')
