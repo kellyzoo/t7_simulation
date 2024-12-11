@@ -1,23 +1,34 @@
 import numpy as np
 import cv2
 from utils import _write_as_png, _generate_test_image
+import torch
+import torch.nn.functional as F
 
 import os
 import argparse
 from pathlib import Path
 
-def reshuffle_mosaic2vid(image, K, bucket=0):
+def create_filter(K, position):
+    i, j = position // K, position % K
+    # Reverse the vertical position (K-1 - i instead of i)
+    i = K - 1 - i
+    j = K - 1 - j
+    filter = np.zeros((K, K))
+    filter[i, j] = 1
+    return filter
+
+def reshuffle_mosaic2vid(image, K):
     """
-    Vectorized conversion of a mosaic image into K^2 low-resolution frames.
+    Extract frames from mosaic using convolution with KxK filters.
     
     Args:
-    - image (numpy array): Input mosaic image of shape (H, W).
-    - K (int): Size of each KxK tile.
+    - image (numpy array): Input mosaic image of shape (H, W)
+    - K (int): Size of each KxK tile
+    - bucket (int): 0 for left bucket, 1 for right bucket
     
     Returns:
-    - frames (numpy array): Reshuffled frames of shape (K^2, H//K, W//K).
+    - frames (numpy array): Extracted frames of shape (K^2, H//K, W//K)
     """
-
     H, W = image.shape
     
     # Compute the padding required to make H and W divisible by K
@@ -25,30 +36,28 @@ def reshuffle_mosaic2vid(image, K, bucket=0):
     pad_w = (K - W % K) % K
     
     # Pad the image with zeros
-    padded_image = np.pad(image, ((0, pad_h), (0, pad_w)), mode='constant', constant_values=0)
-    
-    # Get the new padded dimensions
-    new_H, new_W = padded_image.shape
+    if pad_h != 0 or pad_w != 0:
+        image = np.pad(image, ((0, pad_h), (0, pad_w)), mode='constant', constant_values=0)
     
     # Reshape the image to extract KxK tiles
-    padded_image = padded_image[::-1, :]  # Flip the image vertically
-    # (H//K, K, W//K, K): reshapes into submatrices where each is KxK
-    reshaped_image = padded_image.reshape(new_H // K, K, new_W // K, K)
+
+    # Get output dimensions
+    out_H, out_W = image.shape[0] // K, image.shape[1] // K
+    frames = np.zeros((K * K, out_H, out_W))
     
-    # Transpose to get the KxK tile dimensions aligned for reshuffling
-    # Now shape is (H//K, W//K, K, K)
-    transposed_image = reshaped_image.transpose(0, 2, 1, 3)
-    
-    # Reshape to combine the KxK tiles into K^2 separate frames
-    # (H//K, W//K, K^2): each KxK tile is now flattened into K^2 and frames are across the grid
-    flattened_image = transposed_image.reshape(new_H // K, new_W // K, K * K)
-    
-    # Transpose to get the final frame structure
-    # (K^2, H//K, W//K): now we have K^2 frames of size H//K x W//K
-    frames = flattened_image.transpose(2, 0, 1)
-    frames = frames[::-1, ::-1, :] if bucket == 0 else frames[:, ::-1, :]
-    
+    # Create all K^2 frames using convolution
+    for pos in range(K * K):
+        # Create filter for this position
+        kernel = create_filter(K, pos)
+        image_tensor = torch.from_numpy(image).float().reshape(1, 1, *image.shape)
+        kernel_tensor = torch.from_numpy(kernel).float().reshape(1, 1, *kernel.shape)
+        frame = F.conv2d(image_tensor, kernel_tensor, stride=K)
+        frames[pos] = frame.numpy().squeeze()
+
+    frames = np.concatenate([frames[K:], frames[:K]], axis=0)    
+
     return frames
+
 
 
 if __name__ == "__main__":
@@ -87,7 +96,7 @@ if __name__ == "__main__":
     _write_as_png(os.path.join(output_dir, f"{Path(image_path).stem}_right.png"), image_1)
 
     frames_0 = reshuffle_mosaic2vid(image_0, K)
-    frames_1 = reshuffle_mosaic2vid(image_1, K, 1)
+    frames_1 = reshuffle_mosaic2vid(image_1, K)
 
     # print(f"Reshuffled frames shape: {frames_0.shape}")
     # print(f"Reshuffled frames shape: {frames.shape}")
