@@ -39,8 +39,8 @@ def sample_noise_from_cdf(cdf, intensity):
     """
     Perform inversion sampling to generate random samples from a given CDF.
     """
-    random_values = np.random.rand(*cdf.shape[:-1]) 
-    idx = np.searchsorted(cdf, random_values, side="right")
+    rand_val = np.random.rand() 
+    idx = np.searchsorted(cdf, rand_val, side="right")
     return idx - intensity
 
 def synthesize_noisy_image(clean_image, pmfs):
@@ -54,6 +54,9 @@ def synthesize_noisy_image(clean_image, pmfs):
         for j in range(W):
             intensity = int(clean_image[i, j])  
             cdf = cdf_from_pmf(pmfs[i, j, intensity])  
+            if pmfs[i, j, intensity].sum() == 0.0:
+                noisy_image[i, j] = clean_image[i, j]  
+                continue
             noise = sample_noise_from_cdf(cdf, intensity)  
             noisy_image[i, j] = clean_image[i, j] + noise  
 

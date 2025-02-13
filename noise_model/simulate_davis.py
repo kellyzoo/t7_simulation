@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from pathlib import Path
 from tqdm import tqdm
-
+import timeit
 # Paths
 input_image_dir = "/Users/borabayazit/Downloads/DAVIS/JPEGImages/Full-Resolution"  # Change to your dataset directory
 output_clean_dir = "./processed_davis/clean"
@@ -28,8 +28,8 @@ def sample_noise_from_cdf(cdf, intensity):
     """
     Perform inversion sampling to generate random samples from a given CDF.
     """
-    random_values = np.random.rand(*cdf.shape[:-1]) 
-    idx = np.searchsorted(cdf, random_values, side="right")
+    rand_val = np.random.rand() 
+    idx = np.searchsorted(cdf, rand_val, side="right")
     return idx - intensity
 
 def synthesize_noisy_image(clean_image, pmfs):
@@ -42,7 +42,10 @@ def synthesize_noisy_image(clean_image, pmfs):
     for i in range(H):
         for j in range(W):
             intensity = int(clean_image[i, j])  
-            cdf = cdf_from_pmf(pmfs[i, j, intensity])  
+            cdf = cdf_from_pmf(pmfs[i, j, intensity])
+            if pmfs[i, j, intensity].sum() == 0.0:
+                noisy_image[i, j] = clean_image[i, j]  
+                continue
             noise = sample_noise_from_cdf(cdf, intensity)  
             noisy_image[i, j] = clean_image[i, j] + noise  
 
@@ -54,7 +57,10 @@ def process_images(input_dir, clean_output_dir, noisy_output_dir):
     noisy_output_dir = Path(noisy_output_dir)
 
     img_dirs = sorted([d for d in input_dir.iterdir() if d.is_dir()])
-    
+    numimgs = 0
+    for img_dir in tqdm(img_dirs, desc="Processing directories"): 
+        numimgs += len(list(img_dir.glob("*.jpg")))
+        
     for img_dir in tqdm(img_dirs, desc="Processing directories"): 
         image_files = list(img_dir.glob("*.jpg"))
         for image_path in tqdm(image_files, desc="Processing images"):
@@ -75,12 +81,17 @@ def process_images(input_dir, clean_output_dir, noisy_output_dir):
             clean_image_path = clean_output_dir / f"{image_path.stem}_clean.jpg"
             cv2.imwrite(str(clean_image_path), clean_image_jpg)
 
+            t_0 = timeit.default_timer()
             # Generate noisy image
             noisy_image = synthesize_noisy_image(clean_image, pmfs)
+            t_1 = timeit.default_timer()
+
 
             # Save noisy image as JPG
             noisy_image_path = noisy_output_dir / f"{image_path.stem}_noisy.jpg"
             noisy_image_jpg = (noisy_image / (PIXEL_INTENSITY_RANGE - 1) * 255).astype(np.uint8)
+            elapsed_time = round((t_1 - t_0) * 10 ** 6, 3)
+            print(f"Elapsed time: {elapsed_time} µs")
             cv2.imwrite(str(noisy_image_path), noisy_image_jpg)
 
 
