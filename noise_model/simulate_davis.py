@@ -8,7 +8,7 @@ import timeit
 input_image_dir = "/Users/borabayazit/Downloads/DAVIS/JPEGImages/Full-Resolution"  # Change to your dataset directory
 output_clean_dir = "./processed_davis/clean"
 output_noisy_dir = "./processed_davis/noisy"
-pmf_path = "/Users/borabayazit/tcig_coded_sensor/t7_simulation/noise_model/analysis/pixel_intensity_pmfs_9x9_ransac.npy"
+pmf_path = "/Users/borabayazit/tcig_coded_sensor/t7_simulation/noise_model/analysis/pixel_intensity_pmfs_333x333_ransac.npy"
 
 os.makedirs(output_clean_dir, exist_ok=True)
 os.makedirs(output_noisy_dir, exist_ok=True)
@@ -19,18 +19,6 @@ PIXEL_INTENSITY_RANGE = 32  # Intensity range: 0 to 31
 pmfs = np.load(pmf_path)
 np.set_printoptions(precision=8, suppress=True)
 
-
-def cdf_from_pmf(pmf):
-    """Convert PMF to CDF."""
-    return np.cumsum(pmf, axis=-1)
-
-def sample_noise_from_cdf(cdf, intensity):
-    """
-    Perform inversion sampling to generate random samples from a given CDF.
-    """
-    rand_val = np.random.rand() 
-    idx = np.searchsorted(cdf, rand_val, side="right")
-    return idx - intensity
 
 def synthesize_noisy_image(clean_image, pmfs):
     """
